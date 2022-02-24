@@ -18,6 +18,7 @@ public class Item {
     private long no = 0L;
     private String name = null;
     private long price = 0L;
+    private long quantity = 0L;
     private String content = null;
 
 }

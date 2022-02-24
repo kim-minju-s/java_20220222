@@ -1,23 +1,26 @@
 package com.example;
 
-import java.util.ArrayList;
-
-import com.example.db.MemberDB;
-import com.example.vo.Member;
+import com.example.basic.Child1;
+import com.example.basic.Parent;
 
 // 프로그램 시작위치
 public class App {
     public static void main(String[] args) {
 
-        // 객체 생성
-        MemberDB obj = new MemberDB();
+        // 클래스명 객체명 = new 생성자();
 
-        ArrayList<Member> list = obj.selectListData();
+        // Parent 클래스는 미완성이기 때문에 작동하지X
+        // Parent obj1 = new Parent();
+        // obj1.printNum();
 
-        // Array를 하나로 압축시켰기 때문에 반복문 사용
-        for (Member tmp : list) {
-            System.out.println("목록 조회" + tmp.toString());
-        }
+        Parent obj2 = new Child1();
+        obj2.printNum();
+        obj2.printNum1();
+
+        // child 를 쓸 필요 없음
+        // Child1 obj3 = new Child1();
+        // obj3.printNum();
+        // obj3.printChild1();
 
     }
 }
