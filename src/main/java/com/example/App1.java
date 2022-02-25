@@ -1,22 +1,84 @@
 package com.example;
 
-import java.util.List;
-
-import com.example.db.BoardDB;
-import com.example.db.BoardDBImpl;
-import com.example.vo.Board;
+import com.example.db.ItemDB;
+import com.example.db.ItemDBImpl;
+import com.example.vo.Item;
 
 // 프로그램 시작위치
 public class App1 {
     public static void main(String[] args) {
 
-        BoardDB obj = new BoardDBImpl();
+        ItemDB obj = new ItemDBImpl();
 
-        List<Board> list = obj.selectListBoard();
+        try {
+            Item item = new Item(9L, "와랄ㄹㄷ1", 5200L, 78L, "내용수정");
 
-        for (Board tmp : list) {
-            System.out.println("목록 조회" + tmp.toString());
+            int ret = obj.updateItem(item);
+
+            System.out.println("수정하기" + ret);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+        /*
+         * 페이지 조회
+         * int page = 1;
+         * 
+         * List<Item> list = obj.selectListPageItem(page);
+         * 
+         * for (Item tmp : list) {
+         * System.out.println("페이지 조회" + tmp);
+         * }
+         */
+
+        /*
+         * 목록 조회(항목 1개 제외)
+         * try {
+         * 
+         * List<Item> list = obj.selectListItem();
+         * 
+         * for (Item tmp : list) {
+         * System.out.println("목록 조회" + tmp.toString());
+         * }
+         * 
+         * } catch (Exception e) {
+         * e.printStackTrace();
+         * }
+         */
+
+        /*
+         * // 컬렉션 => 수집
+         * // ex) array => ["aaa", "bbb", "ccc"]
+         * List<String> list1 = new ArrayList<>();
+         * 
+         * // ex) json => {"id":"aaa", "name":"bbb", "age":12}
+         * // 키를 이용해서 1개 수집에 용이, 순차적인 일 X
+         * Map<String, String> map1 = new HashMap<>();
+         */
+
+        // 3. 1개 조회
+        // Map<String, Object> map = obj.selectOneMapItem(7L);
+        // System.out.println(map.get("ID"));
+        // System.out.println(map.get("NAME"));
+        // System.out.println(map.get("PRICE"));
+        // System.out.println(map.get("QTY"));
+
+        // Item item = obj.selectOneItem(7L);
+        // System.out.println(item.getNo());
+        // System.out.println(item.getName());
+        // System.out.println(item.getPrice());
+        // System.out.println(item.getQuantity());
+
+        // 2. 삭제하기
+        /*
+         * try {
+         * int ret = obj.deleteItem(6L);
+         * System.out.println(ret);
+         * } catch (Exception e) {
+         * e.printStackTrace();
+         * }
+         */
 
     }
 }

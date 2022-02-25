@@ -1,5 +1,7 @@
 package com.example.db;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,9 +12,11 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
+import com.mongodb.client.result.UpdateResult;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -42,6 +46,7 @@ public class ItemDBImpl implements ItemDB {
             Bson update = Updates.inc("seq", 1);
             Document doc = this.seqCollection.findOneAndUpdate(filter, update);
             long seq = doc.getLong("seq");
+            System.out.println("seq --->" + seq);
 
             Document doc1 = new Document();
             doc1.append("_id", seq);
@@ -66,53 +71,156 @@ public class ItemDBImpl implements ItemDB {
 
     }
 
+    // 삭제하기
     @Override
-    public int deleteItem(Item item) {
+    public int deleteItem(long code) throws Exception {
+
+        // eq: static 메소드(객체에 .을 찍어서 확인)
+        Bson filter = Filters.eq("_id", code);
+
+        DeleteResult result = collection.deleteOne(filter);
+
+        if (result.getDeletedCount() == 1L) {
+            return 1;
+        }
+        return 0;
+    }
+
+    // 수정하기
+    @Override
+    public int updateItem(Item item) throws Exception {
+
+        Bson filter = Filters.eq("_id", item.getNo());
+
+        Bson bson1 = Updates.set("name", item.getName());
+        Bson bson2 = Updates.set("price", item.getPrice());
+        Bson bson3 = Updates.set("quantity", item.getQuantity());
+
+        Bson update = Updates.combine(bson1, bson2, bson3);
+
+        UpdateResult result = collection.updateOne(filter, update);
+
+        if (result.getModifiedCount() == 1L) {
+            return 1;
+        }
+        return 0;
+    }
+
+    // 목록조회
+    @Override
+    public List<Item> selectListItem() throws Exception {
+        // 일부 데이터만 가져오기 projection
+        // 제외시킴(exclude), 포함시킴(include)
+        Bson projection = Projections.exclude("name");
+
+        FindIterable<Document> rows = collection.find()
+                .projection(projection)
+                .sort(Filters.eq("_id", 1));
+
+        // 타입 변환
+        List<Item> list = new ArrayList<Item>();
+        for (Document tmp : rows) {
+            Item sendItem = new Item(
+                    tmp.getLong("_id"),
+                    null,
+                    tmp.getLong("price"),
+                    tmp.getLong("quantity"),
+                    tmp.getString("content"));
+            list.add(sendItem);
+        }
+
+        return list;
+    }
+
+    // 페이지 조회
+    @Override
+    public List<Item> selectListPageItem(int page) {
         try {
-            Bson bson = Filters.eq("_id", "SEQ_ITEM2_NO");
-            FindIterable<Document> seq = seqCollection.find(bson);
-            Bson bson1 = Filters.eq("_id", seq);
+            // 1 오름차순, -1 내림차순
+            Bson sort = Filters.eq("_id", 1);
 
-            DeleteResult result = collection.deleteOne(bson1);
+            // 페이지 1 => 0, 10
+            // 페이지 2 => 10, 10
+            // 페이지 3 => 20, 10
+            int skip = (page - 1) * 10;
+            int limit = 10;
 
-            System.out.println("이게 맞나..." + result);
+            FindIterable<Document> rows = collection.find()
+                    .sort(sort)
+                    .skip(skip)
+                    .limit(limit);
 
-            return 0;
+            // 타입 변환
+            List<Item> list = new ArrayList<Item>();
+            for (Document tmp : rows) {
+                Item sendItem = new Item(
+                        tmp.getLong("_id"),
+                        tmp.getString("name"),
+                        tmp.getLong("price"),
+                        tmp.getLong("quantity"),
+                        tmp.getString("content"));
+                list.add(sendItem);
+            }
+
+            return list;
+
         } catch (Exception e) {
             e.printStackTrace();
-            return -1;
+            return null;
         }
 
     }
 
-    @Override
-    public int updateItem(Item item) {
-
-        return 0;
-    }
-
-    @Override
-    public List<Item> selectListItem() {
-
-        return null;
-    }
-
-    @Override
-    public List<Item> selectListPageItem(int page) {
-
-        return null;
-    }
-
+    // 1개 조회
     @Override
     public Item selectOneItem(long code) {
+        try {
+            Bson filter = Filters.eq("_id", code);
 
-        return null;
+            Item item = new Item();
+
+            FindIterable<Document> rows = collection.find(filter);
+
+            for (Document tmp : rows) {
+                item.setNo(tmp.getLong("_id"));
+                item.setName(tmp.getString("name"));
+                item.setPrice(tmp.getLong("price"));
+                item.setQuantity(tmp.getLong("quantity"));
+            }
+
+            return item;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
+    // 1개 조회(Map)
     @Override
     public Map<String, Object> selectOneMapItem(long code) {
+        try {
+            Bson filter = Filters.eq("_id", code);
 
-        return null;
+            Map<String, Object> map = new HashMap<>();
+            // map.put("_id", 1L);
+
+            // Iterable 이 붙은건 반복문을 사용해야함.
+            FindIterable<Document> rows = collection.find(filter);
+
+            for (Document tmp : rows) {
+                // map 키(변수)를 마음대로 해서 추가함.
+                map.put("ID", tmp.getLong("_id"));
+                map.put("NAME", tmp.getString("name"));
+                map.put("PRICE", tmp.getLong("price"));
+                map.put("QTY", tmp.getLong("quantity"));
+            }
+
+            return map;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
     }
 
 }
